@@ -1,0 +1,147 @@
+import { useState } from 'react';
+import { Sparkles, MessageSquare, Send, Leaf, Users, ClipboardList, AlertCircle, Lightbulb } from 'lucide-react';
+import { useApp, aiContext } from '../state.jsx';
+import { Card, AIButton, ErrorBanner, List, Spinner, Notice } from '../components/ui.jsx';
+import { useAI } from '../components/useAI.js';
+import { api } from '../lib/api.js';
+
+const RISK = { low: 'bg-good/10 text-good', moderate: 'bg-warn/10 text-warn', high: 'bg-hot/10 text-hot', extreme: 'bg-hot/10 text-hot' };
+
+function Briefing() {
+  const app = useApp();
+  const key = `insights:${app.city.name}:${app.scenario.id}:${app.scenario.airTemp}`;
+  const { data, loading, error, run } = useAI(key, 'insights');
+  const r = data?.result;
+  const generate = () => {
+    const ctx = aiContext(app);
+    run({ city: ctx.city, cityStats: ctx.cityStats, hotspots: ctx.hotspots, weather: ctx.weather, provenance: ctx.provenance });
+  };
+
+  return (
+    <Card title="City heat intelligence briefing" icon={Sparkles}
+      actions={<AIButton onClick={generate} loading={loading} aiReady={app.aiReady}>{r ? 'Regenerate' : 'Generate briefing'}</AIButton>}>
+      {!app.aiReady && <Notice tone="warn">Gemini key not configured on the server - AI briefing unavailable.</Notice>}
+      {loading && <Spinner label="Gemini is writing the briefing from the local model outputs…" />}
+      <ErrorBanner error={error} title="AI request failed" onRetry={generate} />
+      {!r && !loading && !error && app.aiReady && (
+        <p className="text-sm text-ink-3">
+          Generates an environmental briefing for {app.city.name} under "{app.scenario.label}" using the locally computed heat statistics and {app.zones.length} hotspot zones.
+        </p>
+      )}
+      {r && !loading && (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-start gap-3">
+            <h2 className="flex-1 text-lg font-semibold leading-snug text-ink">{r.headline}</h2>
+            {r.riskLevel && <span className={`rounded-full px-3 py-1 text-xs font-bold  ${RISK[r.riskLevel] || RISK.moderate}`}>{r.riskLevel} risk</span>}
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div><div className="label mb-2 flex items-center gap-1"><Lightbulb className="h-3 w-3" /> Key findings</div><List items={r.keyFindings} /></div>
+            <div><div className="label mb-2 flex items-center gap-1"><Users className="h-3 w-3" /> Vulnerable groups</div><List items={r.vulnerableGroups} /></div>
+          </div>
+          {Array.isArray(r.environmentalInsights) && r.environmentalInsights.length > 0 && (
+            <div>
+              <div className="label mb-2 flex items-center gap-1"><Leaf className="h-3 w-3" /> Environmental insights</div>
+              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                {r.environmentalInsights.map((x, i) => (
+                  <div key={i} className="rounded-[3px] border border-rule bg-raised/60 p-3">
+                    <div className="text-sm font-semibold text-ink">{x.topic}</div>
+                    <div className="mt-1 text-xs text-ink-2">{x.insight}</div>
+                    {x.metric && <div className="mt-2 inline-block rounded bg-accent/10 px-1.5 py-0.5 text-[11px] text-hot">{x.metric}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {Array.isArray(r.recommendations) && r.recommendations.length > 0 && (
+            <div>
+              <div className="label mb-2">Cooling recommendations</div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {r.recommendations.map((x, i) => (
+                  <div key={i} className="rounded-[3px] border border-rule bg-raised/60 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-ink">{x.title}</span>
+                      <span className="flex gap-1 text-[10px]">
+                        {x.scale && <span className="rounded bg-raised px-1.5 py-0.5 text-ink-2">{x.scale}</span>}
+                        {x.horizon && <span className="rounded bg-accent/10 px-1.5 py-0.5 text-accent">{x.horizon}-term</span>}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-ink-3">{x.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div><div className="label mb-2 flex items-center gap-1"><ClipboardList className="h-3 w-3" /> Heat action plan (next event)</div><List items={r.heatActionPlan} /></div>
+            <div><div className="label mb-2 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Data caveats</div><List items={r.dataCaveats} /></div>
+          </div>
+          <div className="text-[11px] text-ink-3">Generated by {data.model} · {new Date(data.generatedAt).toLocaleString()}</div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function Ask() {
+  const app = useApp();
+  const [q, setQ] = useState('');
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const ask = async (question) => {
+    const text = (question ?? q).trim();
+    if (text.length < 3) return;
+    setLoading(true); setError(null);
+    try {
+      const ctx = aiContext(app);
+      const res = await api.ai('ask', { city: ctx.city, question: text, context: { ...ctx, plan: app.plan ? { total: app.plan.total, byType: app.plan.byType, strategy: app.plan.strategy } : null } });
+      setHistory((h) => [...h, { q: text, a: res.result?.answer || '(no answer)', followUps: res.result?.followUps || [] }]);
+      setQ('');
+    } catch (e) { setError(e); } finally { setLoading(false); }
+  };
+
+  const suggestions = [
+    `Why is ${app.zones[0]?.name || 'the top hotspot'} hotter than the rest of the area?`,
+    'Which intervention gives the most cooling per dollar here?',
+    'How should outdoor workers be protected during the hottest hours?',
+  ];
+
+  return (
+    <Card title="Ask COOLTRACE" icon={MessageSquare}>
+      <div className="space-y-3">
+        {history.map((h, i) => (
+          <div key={i} className="space-y-2">
+            <div className="ml-auto w-fit max-w-[85%] rounded-[3px] bg-accent/10 px-3 py-2 text-sm text-hot">{h.q}</div>
+            <div className="max-w-[95%] whitespace-pre-line rounded-[3px] border border-rule bg-raised/60 px-3 py-2 text-sm text-ink">{h.a}</div>
+            {i === history.length - 1 && h.followUps.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {h.followUps.map((f, j) => <button key={j} className="rounded-full border border-rule-strong px-2.5 py-1 text-xs text-ink-2 hover:bg-raised" onClick={() => ask(f)} disabled={loading}>{f}</button>)}
+              </div>
+            )}
+          </div>
+        ))}
+        {!history.length && (
+          <div className="flex flex-wrap gap-1.5">
+            {suggestions.map((s) => <button key={s} className="rounded-full border border-rule-strong px-2.5 py-1 text-xs text-ink-2 hover:bg-raised disabled:opacity-50" onClick={() => ask(s)} disabled={loading || !app.aiReady}>{s}</button>)}
+          </div>
+        )}
+        {loading && <Spinner label="Thinking…" />}
+        <ErrorBanner error={error} title="AI request failed" />
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); ask(); }}>
+          <input className="input flex-1" maxLength={1000} placeholder={app.aiReady ? 'Ask about heat risk, hotspots or interventions…' : 'Configure the Gemini key to enable Q&A'} value={q} onChange={(e) => setQ(e.target.value)} disabled={!app.aiReady} />
+          <button className="btn-primary" disabled={loading || !app.aiReady || q.trim().length < 3}><Send className="h-4 w-4" /></button>
+        </form>
+      </div>
+    </Card>
+  );
+}
+
+export default function Insights() {
+  return (
+    <div className="grid items-start gap-4 xl:grid-cols-[1fr_440px]">
+      <Briefing />
+      <Ask />
+    </div>
+  );
+}

@@ -1,0 +1,15 @@
+{
+  "name": "cooltrace-video",
+  "private": true,
+  "type": "module",
+  "description": "Scripts that capture COOLTRACE footage and render the motion-graphic demo video",
+  "scripts": {
+    "capture": "node capture.mjs",
+    "render": "node render.mjs",
+    "shots": "node shots.mjs"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "playwright-core": "^1.49.1"
+  }
+}

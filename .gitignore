@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+server/data/cache/*.json
+!server/data/cache/.gitkeep
+*.log
+video/node_modules/
+video/footage/
+video/frames/
+video/preview/
+video/data/*.wav
+video/render.log
+*.zip
+.claude/

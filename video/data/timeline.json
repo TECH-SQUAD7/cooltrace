@@ -1,0 +1,56 @@
+[
+ {
+  "kind": "intro",
+  "id": "intro",
+  "start": 0,
+  "dur": 6
+ },
+ {
+  "kind": "statement",
+  "id": "statement",
+  "start": 6,
+  "dur": 5.4
+ },
+ {
+  "kind": "feature",
+  "id": "heatmap",
+  "start": 11.4,
+  "dur": 10.545454545454545
+ },
+ {
+  "kind": "feature",
+  "id": "hotspots",
+  "start": 21.945454545454545,
+  "dur": 13.857862318840581
+ },
+ {
+  "kind": "feature",
+  "id": "optimiser",
+  "start": 35.80331686429513,
+  "dur": 12.0625
+ },
+ {
+  "kind": "feature",
+  "id": "simulator",
+  "start": 47.86581686429513,
+  "dur": 11.18181818181818
+ },
+ {
+  "kind": "feature",
+  "id": "briefing",
+  "start": 59.04763504611331,
+  "dur": 9.645333333333332
+ },
+ {
+  "kind": "arch",
+  "id": "arch",
+  "start": 68.69296837944664,
+  "dur": 6.8
+ },
+ {
+  "kind": "outro",
+  "id": "outro",
+  "start": 75.49296837944664,
+  "dur": 6.2
+ }
+]
