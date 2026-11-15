@@ -11,6 +11,9 @@ before/after effect.
 
 **Demo video:** [`docs/cooltrace-demo.mp4`](docs/cooltrace-demo.mp4) (1080p, about 80 seconds, original soundtrack)
 
+Built with the Google Gemini API, Leaflet, OpenStreetMap, Open-Meteo/ERA5, React and Recharts, with Claude as the
+AI coding assistant. No satellite data is used. See [Credits and acknowledgements](#credits-and-acknowledgements).
+
 ## What it does
 
 | Section | What you get | Where it runs |
@@ -148,8 +151,29 @@ video/    Footage capture, motion-graphic composition, soundtrack and render scr
 docs/     Screenshots and the demo video
 ```
 
-## Licence and attribution
+## Credits and acknowledgements
 
-Code is released under the MIT licence (see [LICENSE](LICENSE)).
-Weather data © Open-Meteo.com (CC BY 4.0), ERA5 © Copernicus/ECMWF. Map data © OpenStreetMap contributors (ODbL).
-Basemap © Esri. AI by Google Gemini.
+This list covers only what the project actually uses.
+
+| Credit | What we use and how |
+|---|---|
+| **AI model** | [Google Gemini API](https://ai.google.dev/) (`gemini-3.5-flash` by default, falling back to `gemini-flash-latest`, `gemini-3.5-flash-lite` or `gemini-3.8-flash`). Gemini writes the hotspot explanations, city briefings, plan reviews and Q&A answers. It does not compute any of the numbers. |
+| **AI coding assistant** | This application was built with **Claude** (Anthropic), using Claude Opus 5.5 in Claude Code. Claude wrote and tested the code, the design, the documentation and the demo-video pipeline under the author's direction. Claude is not used at runtime; the app calls only Gemini. |
+| **Mapping** | [Leaflet](https://leafletjs.com/) 1.9.4 with [React Leaflet](https://react-leaflet.js.org/) 4.2.1 for the interactive maps. The basemap is [Esri World Light Gray Canvas](https://www.arcgis.com/home/item.html?id=ed712cb1db3e4bae9e85329040fb9a49) (base + reference) tiles, © Esri, HERE, Garmin and © OpenStreetMap contributors. |
+| **Map data** | [OpenStreetMap](https://www.openstreetmap.org/copyright) © OpenStreetMap contributors, available under the [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/). It provides buildings and levels, roads, parks, water, trees and tree rows, queried through the [Overpass API](https://overpass-api.de/) (overpass-api.de, overpass.kumi.systems, overpass.private.coffee, maps.mail.ru mirrors). |
+| **Weather and climate data** | [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). The Forecast API supplies current conditions, the hourly and daily forecast and the past 30 days. The Historical Weather API supplies the hottest day of the past 12 months and monthly climatology. The Geocoding API powers city search. Historical data is **ERA5 reanalysis** from the Copernicus Climate Change Service / ECMWF ([Hersbach et al., 2023](https://doi.org/10.24381/cds.adbb2d47)). |
+| **Satellite data** | **None.** COOLTRACE does not use Landsat, Sentinel, MODIS or any other satellite imagery. Surface and air temperatures are **modelled estimates** from weather plus OSM land cover, and they are labelled that way throughout the app. (We tried ESA WorldCover 10 m land cover during development, but its server was unreachable, so it is not used.) |
+| **Population** | No census dataset. Population exposure is a **proxy** computed from OSM building floor area at 40 m² per person. |
+| **Frontend libraries** | [React](https://react.dev/) 18.3, [Vite](https://vitejs.dev/) 6.1, [Tailwind CSS](https://tailwindcss.com/) 4.1, [Recharts](https://recharts.org/) 2.15 (charts), [Lucide](https://lucide.dev/) icons (lucide-react 0.468) |
+| **Backend libraries** | [Node.js](https://nodejs.org/) 18.17+ (built-in `fetch` and `node:test`), [Express](https://expressjs.com/) 4.21, [dotenv](https://github.com/motdotla/dotenv) 16 |
+| **Testing and tooling** | [Vitest](https://vitest.dev/) 3.0 (engine tests), [concurrently](https://github.com/open-cli-tools/concurrently) 9 (dev script) |
+| **Typography** | [Archivo](https://fonts.google.com/specimen/Archivo) by Omnibus-Type, via Google Fonts (SIL Open Font License 1.1) |
+| **Demo video production** | [Playwright](https://playwright.dev/) (`playwright-core` 1.49) driving Google Chrome for footage capture through the Chrome DevTools Protocol screencast. [FFmpeg](https://ffmpeg.org/) (via `ffmpeg-static` 5.2) for encoding. The soundtrack is generated procedurally by `video/audio.mjs` and uses no samples or third-party music. |
+| **Methods** | Getis-Ord Gi* hot-spot statistic (Getis & Ord, 1992; Ord & Getis, 1995). NOAA/NWS heat index (Rothfusz regression, 1990). |
+| **Languages** | JavaScript (ES modules), JSX, HTML and CSS. **No Python** is used. |
+
+## Licence
+
+Code is released under the MIT licence (see [LICENSE](LICENSE)). Data and third-party assets remain under their own
+licences, listed above: Open-Meteo (CC BY 4.0), ERA5 (Copernicus licence), OpenStreetMap (ODbL), Esri basemap
+(Esri terms of use) and Archivo (SIL OFL 1.1).
