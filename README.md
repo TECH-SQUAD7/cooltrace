@@ -10,6 +10,7 @@ before/after effect.
 ![Heat map of central Madrid on the hottest day of the past year](docs/screenshots/01-heatmap.png)
 
 **Demo video:** [`docs/cooltrace-demo.mp4`](docs/cooltrace-demo.mp4) (1080p, about 80 seconds, original soundtrack)
+**Project writeup:** [`WRITEUP.md`](WRITEUP.md) (problem, approach, challenges and what's next)
 
 Built with the Google Gemini API, Leaflet, OpenStreetMap, Open-Meteo/ERA5, React and Recharts, with Claude as the
 AI coding assistant. No satellite data is used. See [Credits and acknowledgements](#credits-and-acknowledgements).
